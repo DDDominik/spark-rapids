@@ -1,3 +1,6 @@
+/*** spark-rapids-shim-json-lines
+{"spark": "351kwai"}
+spark-rapids-shim-json-lines ***/
 /*
  * Copyright (c) 2019-2024, NVIDIA CORPORATION.
  *
@@ -1331,11 +1334,15 @@ class RapidsShuffleInternalManagerBase(conf: SparkConf, val isDriver: Boolean)
     }
   }
 
+  // Kuaishou Spark 3.5.1 has 3-parameter signature
   override def registerShuffle[K, V, C](
       shuffleId: Int,
+      numMaps: Int,
       dependency: ShuffleDependency[K, V, C]): ShuffleHandle = {
     // Always register with the wrapped handler so we can write to it ourselves if needed
-    val orig = wrapped.registerShuffle(shuffleId, dependency)
+    // Use shim to handle different Spark version signatures
+    val orig = com.nvidia.spark.rapids.shims.RapidsShuffleInternalManagerShim
+      .registerShuffleWithWrapped(wrapped, shuffleId, numMaps, dependency)
 
     dependency match {
       case _ if shouldFallThroughOnEverything ||

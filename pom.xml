@@ -778,7 +778,7 @@
         <spark341db.version>3.4.1-databricks</spark341db.version>
         <spark350.version>3.5.0</spark350.version>
         <spark351.version>3.5.1</spark351.version>
-        <spark351kwai.version>3.5.1-kwai</spark351kwai.version>
+        <spark351kwai.version>3.5.1U0.16-SNAPSHOT</spark351kwai.version>
         <mockito.version>3.12.4</mockito.version>
         <scala.plugin.version>4.3.0</scala.plugin.version>
         <maven.install.plugin.version>3.1.1</maven.install.plugin.version>
@@ -1249,7 +1249,7 @@ This will force full Scala code rebuild in downstream modules.
                         <scalaVersion>${scala.version}</scalaVersion>
                         <checkMultipleScalaVersions>true</checkMultipleScalaVersions>
                         <failOnMultipleScalaVersions>true</failOnMultipleScalaVersions>
-                        <recompileMode>${scala.recompileMode}</recompileMode>
+                        <recompileMode>all</recompileMode>
                         <args>
                             <arg>-unchecked</arg>
                             <arg>-deprecation</arg>
@@ -1816,6 +1816,18 @@ This will force full Scala code rebuild in downstream modules.
             </releases>
             <snapshots>
                 <enabled>${cloudera.repo.enabled}</enabled>
+            </snapshots>
+        </repository>
+        <repository>
+            <id>kuaishou-nexus</id>
+            <name>Kuaishou Nexus Repository</name>
+            <url>http://nexus.corp.kuaishou.com:88/nexus/content/groups/public</url>
+            <releases>
+                <enabled>true</enabled>
+            </releases>
+            <snapshots>
+                <enabled>true</enabled>
+                <updatePolicy>always</updatePolicy>
             </snapshots>
         </repository>
     </repositories>
