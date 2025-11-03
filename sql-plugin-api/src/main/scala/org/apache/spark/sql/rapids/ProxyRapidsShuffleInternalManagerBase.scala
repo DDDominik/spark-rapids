@@ -84,9 +84,10 @@ class ProxyRapidsShuffleInternalManagerBase(
 
   def registerShuffle[K, V, C](
       shuffleId: Int,
+      numMaps: Int,
       dependency: ShuffleDependency[K, V, C]
   ): ShuffleHandle = {
-    realImpl.registerShuffle(shuffleId, dependency)
+    realImpl.registerShuffle(shuffleId, numMaps, dependency)
   }
 
   def unregisterShuffle(shuffleId: Int): Boolean = realImpl.unregisterShuffle(shuffleId)

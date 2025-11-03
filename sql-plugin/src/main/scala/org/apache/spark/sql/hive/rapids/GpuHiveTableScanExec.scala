@@ -256,7 +256,7 @@ case class GpuHiveTableScanExec(requestedAttributes: Seq[Attribute],
         val path               = new Path(directory)
         val fs                 = path.getFileSystem(hadoopConf)
         val dirContents        = fs.listStatus(path).filter(isNonEmptyDataFile)
-        PartitionDirectory(partValues, dirContents)
+        PartitionDirectory(partValues, dirContents, None)
     }.toArray
 
     val maxSplitBytes      = FilePartition.maxSplitBytes(sparkSession, selectedPartitions)

@@ -202,7 +202,7 @@ class RapidsShuffleThreadedWriterSuite extends AnyFunSuite
     taskMetrics = spy(new TaskMetrics)
     val shuffleWriteMetrics = new ShuffleWriteMetrics
     shuffleHandle = new ShuffleHandleWithMetrics[Int, Int, Int](
-      0, Map.empty, dependency)
+      0, 1, Map.empty, dependency)
     when(dependency.partitioner).thenReturn(new HashPartitioner(7))
     when(dependency.serializer).thenReturn(new JavaSerializer(conf))
     when(dependencyBad.partitioner).thenReturn(new HashPartitioner(7))
@@ -458,6 +458,7 @@ class RapidsShuffleThreadedWriterSuite extends AnyFunSuite
 
       val shuffleHandle = new ShuffleHandleWithMetrics[Int, BadSerializable, BadSerializable](
         0,
+        1,
         Map.empty,
         dependencyBad
       )

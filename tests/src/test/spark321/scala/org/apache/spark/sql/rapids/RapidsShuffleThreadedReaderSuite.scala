@@ -164,7 +164,7 @@ class RapidsShuffleThreadedReaderSuite
         when(dependency.aggregator).thenReturn(None)
         when(dependency.keyOrdering).thenReturn(None)
         new ShuffleHandleWithMetrics[Int, Int, Int](
-          shuffleId, Map.empty, dependency)
+          shuffleId, 1, Map.empty, dependency)
       }
 
       val serializerManager = new SerializerManager(

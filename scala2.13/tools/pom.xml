@@ -93,9 +93,14 @@
                             <target>
                                 <taskdef resource="net/sf/antcontrib/antcontrib.properties"/>
                                 <ac:if xmlns:ac="antlib:net.sf.antcontrib">
-                                    <not>
-                                        <matches pattern="db$" string="${buildver}"/>
-                                    </not>
+                                    <and>
+                                        <not>
+                                            <matches pattern="db$" string="${buildver}"/>
+                                        </not>
+                                        <not>
+                                            <matches pattern="kwai$" string="${buildver}"/>
+                                        </not>
+                                    </and>
                                     <then>
                                     <mkdir dir="${tools.datagen.dir}"/>
                                     <java classname="com.nvidia.spark.rapids.SupportedOpsForTools" failonerror="true">
@@ -115,7 +120,7 @@
                                     </java>
                                     </then>
                                     <else>
-                                        <echo message="Skipping tools build on Databricks"/>
+                                        <echo message="Skipping tools build on Databricks and Kwai variants"/>
                                     </else>
                                 </ac:if>
                             </target>

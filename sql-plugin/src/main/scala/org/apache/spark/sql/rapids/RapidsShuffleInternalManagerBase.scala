@@ -52,17 +52,19 @@ import org.apache.spark.util.collection.{ExternalSorter, OpenHashSet}
 
 class GpuShuffleHandle[K, V](
     val wrapped: ShuffleHandle,
+    numMaps: Int,
     override val dependency: GpuShuffleDependency[K, V, V])
-  extends BaseShuffleHandle(wrapped.shuffleId, dependency) {
+  extends BaseShuffleHandle(wrapped.shuffleId, numMaps, dependency) {
 
   override def toString: String = s"GPU SHUFFLE HANDLE $shuffleId"
 }
 
 class ShuffleHandleWithMetrics[K, V, C](
     shuffleId: Int,
+    numMaps: Int,
     val metrics: Map[String, SQLMetric],
     override val dependency: GpuShuffleDependency[K, V, C])
-    extends BaseShuffleHandle(shuffleId, dependency) {
+    extends BaseShuffleHandle(shuffleId, numMaps, dependency) {
 }
 
 abstract class GpuShuffleBlockResolverBase(
@@ -407,7 +409,8 @@ abstract class RapidsShuffleThreadedWriterBase[K, V](
             shuffleCombineTimeMetric.foreach(_ += combineTimeNs)
             pl
           }
-          myMapStatus = Some(MapStatus(blockManager.shuffleServerId, partLengths, mapId))
+          myMapStatus = Some(MapStatus(blockManager.shuffleServerId,
+                                       partLengths, partLengths, mapId))
         } catch {
           // taken directly from BypassMergeSortShuffleWriter
           case e: Exception =>
@@ -1162,7 +1165,7 @@ class RapidsCachingWriter[K, V](
         }
         logInfo(s"Done caching shuffle success=$success, server_id=$shuffleServerId, "
             + s"map_id=$mapId, sizes=${sizes.mkString(",")}")
-        Some(MapStatus(shuffleServerId, sizes, mapId))
+        Some(MapStatus(shuffleServerId, sizes, sizes, mapId))
       }
     } finally {
       nvtxRange.close()
@@ -1333,15 +1336,16 @@ class RapidsShuffleInternalManagerBase(conf: SparkConf, val isDriver: Boolean)
 
   override def registerShuffle[K, V, C](
       shuffleId: Int,
+      numMaps: Int,
       dependency: ShuffleDependency[K, V, C]): ShuffleHandle = {
     // Always register with the wrapped handler so we can write to it ourselves if needed
-    val orig = wrapped.registerShuffle(shuffleId, dependency)
+    val orig = wrapped.registerShuffle(shuffleId, numMaps,  dependency)
 
     dependency match {
       case _ if shouldFallThroughOnEverything ||
         rapidsConf.isMultiThreadedShuffleManagerMode => orig
       case gpuDependency: GpuShuffleDependency[K, V, C] if gpuDependency.useGPUShuffle =>
-        new GpuShuffleHandle(orig,
+        new GpuShuffleHandle(orig, numMaps,
           dependency.asInstanceOf[GpuShuffleDependency[K, V, V]])
       case _ => orig
     }
@@ -1395,6 +1399,7 @@ class RapidsShuffleInternalManagerBase(conf: SparkConf, val isDriver: Boolean)
             // with 0 threads we fallback to the Spark-provided writer.
             val handleWithMetrics = new ShuffleHandleWithMetrics(
               bmssh.shuffleId,
+              bmssh.numMaps,
               gpuDep.metrics,
               // cast the handle with specific generic types due to type-erasure
               gpuDep.asInstanceOf[GpuShuffleDependency[K, V, V]])
@@ -1481,7 +1486,7 @@ class RapidsShuffleInternalManagerBase(conf: SparkConf, val isDriver: Boolean)
               SortShuffleManager.canUseBatchFetch(startPartition, endPartition, context)
 
             val shuffleHandleWithMetrics = new ShuffleHandleWithMetrics(
-              baseHandle.shuffleId, gpuDep.metrics, gpuDep)
+              baseHandle.shuffleId, baseHandle.numMaps, gpuDep.metrics, gpuDep)
             // in most scenarios, the pools have already started, except for local mode
             // here we try to start them if we see they haven't
             RapidsShuffleInternalManagerBase.startThreadPoolIfNeeded(
